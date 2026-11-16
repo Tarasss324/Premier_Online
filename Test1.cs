@@ -13,16 +13,16 @@ public class Test : PageTest
     private ILocator Logo => Header.Locator("a.uk-logo");
     private ILocator LogoImage => Logo.GetByRole(AriaRole.Img);
     private ILocator MenuButton => Page.Locator("button:has(i.fa-bars)");
-   private ILocator HeaderNavigation => Page.Locator("nav .uk-navbar-left > ul.uk-navbar-nav");
-   private ILocator HederCreateAccount => Header.GetByRole(AriaRole.Link, new() { Name = "Create Account" });
-   private ILocator FirstName => Page.Locator("#first_name");
+    private ILocator HeaderNavigation => Page.Locator("nav .uk-navbar-left > ul.uk-navbar-nav");
+    private ILocator HederCreateAccount => Header.GetByRole(AriaRole.Link, new() { Name = "Create Account" });
+    private ILocator FirstName => Page.Locator("#first_name");
     private ILocator LastName => Page.Locator("#last_name");    
     private ILocator Email => Page.Locator("#email");
     private ILocator Password => Page.Locator("#password");
     private ILocator RepeatPassword => Page.Locator("#password_repeat");
     private ILocator ContinueButton => Page.GetByRole(AriaRole.Button, new() { Name = "Continue" });
  
-   private ILocator HeaderLink(string name) =>
+    private ILocator HeaderLink(string name) =>
     HeaderNavigation.GetByRole(
         AriaRole.Link,
         new() { Name = name, Exact = true });
