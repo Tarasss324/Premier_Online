@@ -9,12 +9,19 @@ namespace TestProject;
 [TestFixture]
 public class Test : PageTest
 {
+    private const string BaseUrl = "https://www.premieronline.com";
+
     private ILocator Header => Page.Locator(".uk-navbar-container").First;     
     private ILocator Logo => Header.Locator("a.uk-logo");
     private ILocator LogoImage => Logo.GetByRole(AriaRole.Img);
     private ILocator MenuButton => Page.Locator("button:has(i.fa-bars)");
     private ILocator HeaderNavigation => Page.Locator("nav .uk-navbar-left > ul.uk-navbar-nav");
-    private ILocator HederCreateAccount => Header.GetByRole(AriaRole.Link, new() { Name = "Create Account" });
+    private ILocator CreateAccountLink => Header.GetByRole(
+        AriaRole.Link,
+        new() { Name = "Create Account", Exact = true });
+    private ILocator RegistrationHeading => Page.GetByRole(
+        AriaRole.Heading,
+        new() { Name = "Create Account", Exact = true });
     private ILocator FirstName => Page.Locator("#first_name");
     private ILocator LastName => Page.Locator("#last_name");    
     private ILocator Email => Page.Locator("#email");
@@ -104,11 +111,13 @@ public class Test : PageTest
     }
 
     [Test]
-    public async Task Resistration()
+    public async Task RegistrationFormCanBeFilled()
     {
-        await Page.GotoAsync("https://www.premieronline.com");
-        await HederCreateAccount.ClickAsync();
+        await Page.GotoAsync(BaseUrl);
+        await CreateAccountLink.ClickAsync();
+
         await Expect(Page).ToHaveURLAsync(new Regex("register"));
+        await Expect(RegistrationHeading).ToBeVisibleAsync();
 
         await Expect(FirstName).ToBeVisibleAsync();
         await Expect(LastName).ToBeVisibleAsync();
@@ -121,25 +130,39 @@ public class Test : PageTest
         await Expect(Email).ToBeEnabledAsync();
         await Expect(Password).ToBeEnabledAsync();
         await Expect(RepeatPassword).ToBeEnabledAsync();
+        await Expect(ContinueButton).ToBeVisibleAsync();
+
+        var uniqueEmail = $"test-{Guid.NewGuid():N}@example.com";
 
         await FirstName.FillAsync("Test");
         await LastName.FillAsync("User");
-        await Email.FillAsync("test.user@example.com");
-        await Password.FillAsync("Password");
-        await RepeatPassword.FillAsync("first");
+        await Email.FillAsync(uniqueEmail);
+        await Password.FillAsync("TestPass123");
+        await RepeatPassword.FillAsync("TestPass123");
  
         await Expect(FirstName).ToHaveValueAsync("Test");
         await Expect(LastName).ToHaveValueAsync("User");
-        await Expect(Email).ToHaveValueAsync("test.user@example.com");
-        Console.WriteLine($"First name: {await FirstName.InputValueAsync()}");
-        Console.WriteLine($"Last name: {await LastName.InputValueAsync()}");    
-        Console.WriteLine($"Email: {await Email.InputValueAsync()}");
- 
+        await Expect(Email).ToHaveValueAsync(uniqueEmail);
+        await Expect(Password).ToHaveValueAsync("TestPass123");
+        await Expect(RepeatPassword).ToHaveValueAsync("TestPass123");
     }
 
-    private void Timeout(int v)
+    [Test]
+    public async Task RegistrationFormRejectsDifferentPasswords()
     {
-        throw new NotImplementedException();
+        await Page.GotoAsync(BaseUrl);
+        await CreateAccountLink.ClickAsync();
+
+        await FirstName.FillAsync("Test");
+        await LastName.FillAsync("User");
+        await Email.FillAsync($"test-{Guid.NewGuid():N}@example.com");
+        await Password.FillAsync("TestPass123");
+        await RepeatPassword.FillAsync("DifferentPass123");
+
+        await ContinueButton.ClickAsync();
+
+        await Expect(Page.GetByText("Your passwords don't match."))
+            .ToBeVisibleAsync();
     }
 }
 
