@@ -14,4 +14,11 @@
     <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="testcredentials.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
