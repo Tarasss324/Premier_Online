@@ -18,6 +18,8 @@ public class Test : PageTest
     private ILocator LogoImage => Logo.GetByRole(AriaRole.Img);
     private ILocator MenuButton => Page.Locator("button:has(i.fa-bars)");
     private ILocator HeaderNavigation => Page.Locator("nav .uk-navbar-left > ul.uk-navbar-nav");
+    private ILocator MobileMenu => Page.Locator(".blue-dropdown");
+    private ILocator MobileMenuNavigation => MobileMenu.Locator("ul.mobile-nav");
     private ILocator CreateAccountLink => Header.GetByRole(
         AriaRole.Link,
         new() { Name = "Create Account", Exact = true });
@@ -30,6 +32,9 @@ public class Test : PageTest
     private ILocator Password => Page.Locator("#password");
     private ILocator RepeatPassword => Page.Locator("#password_repeat");
     private ILocator ContinueButton => Page.GetByRole(AriaRole.Button, new() { Name = "Continue" });
+    private ILocator ValidationErrors => Page.Locator(
+        ".uk-alert-danger:visible, .uk-form-danger:visible, [aria-invalid='true']:visible");
+    private ILocator RegistrationSuccessMessage => Page.Locator(".uk-alert-success").First;
 
     private ILocator HeaderLink(string name) =>
         HeaderNavigation.GetByRole(
@@ -62,10 +67,16 @@ public class Test : PageTest
     public async Task MobileMenuOpens()
     {
         await Page.SetViewportSizeAsync(390, 844);
-        await MenuButton.ClickAsync();
+        await Expect(MenuButton).ToBeVisibleAsync();
 
-        // Перевіряємо результат дії, а не лише те, що клік не завершився помилкою.
-        await Expect(HeaderNavigation).ToBeVisibleAsync();
+        // На сайті мобільне меню відкривається через окремий UIkit dropdown.
+        await MenuButton.DispatchEventAsync("click");
+
+        await Expect(MobileMenu).ToBeVisibleAsync();
+        await Expect(MobileMenuNavigation).ToBeVisibleAsync();
+        await Expect(MobileMenuNavigation.GetByRole(
+            AriaRole.Link,
+            new() { Name = "Events", Exact = true })).ToBeVisibleAsync();
     }
 
     [Test]
@@ -102,7 +113,7 @@ public class Test : PageTest
     }
 
     [Test]
-    public async Task RegistrationFormCanBeFilled()
+    public async Task RegistrationSucceedsWithValidData()
     {
         await OpenRegistrationFormAsync();
 
@@ -115,6 +126,13 @@ public class Test : PageTest
         await Expect(Email).ToHaveValueAsync(uniqueEmail);
         await Expect(Password).ToHaveValueAsync(TestPassword);
         await Expect(RepeatPassword).ToHaveValueAsync(TestPassword);
+
+        await ContinueButton.ClickAsync();
+
+        await Expect(ValidationErrors).ToHaveCountAsync(0);
+        await Expect(RegistrationSuccessMessage).ToContainTextAsync("Thank you, Test.");
+        await Expect(RegistrationSuccessMessage).ToContainTextAsync(
+            "Please check your email for your Activation Button.");
     }
 
     [Test]
