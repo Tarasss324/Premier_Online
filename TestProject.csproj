@@ -9,12 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DotNetEnv" Version="3.2.0" />
     <PackageReference Include="Microsoft.Playwright.NUnit" Version="1.64.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Config/environments.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="testcredentials.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
