@@ -24,11 +24,32 @@ public static class TestConfig
         var policyFile = Path.Combine(AppContext.BaseDirectory, "Config", "environments.json");
         var policy = JsonSerializer.Deserialize<EnvironmentPolicy>(File.ReadAllText(policyFile))
             ?? throw new InvalidOperationException("Environment policy is missing.");
-        var environmentName = TestEnvironment.GetEnvironmentName(
-            Environment.GetEnvironmentVariable("TEST_ENV"), policy);
 
         var values = new Dictionary<string, string>(StringComparer.Ordinal);
         var projectDirectory = FindProjectDirectory();
+        var processEnvironmentName = Environment.GetEnvironmentVariable("TEST_ENV");
+        var environmentName = processEnvironmentName?.Trim().ToLowerInvariant();
+
+        // TEST_ENV is normally supplied by the process (for example, in CI). When
+        // tests are started from an IDE, load it from the project-level .env file.
+        if (string.IsNullOrEmpty(environmentName))
+        {
+            var defaultEnvironmentFile = projectDirectory is null
+                ? null
+                : Path.Combine(projectDirectory, ".env");
+
+            if (defaultEnvironmentFile is not null && File.Exists(defaultEnvironmentFile))
+            {
+                foreach (var pair in Env.NoEnvVars().Load(defaultEnvironmentFile))
+                {
+                    values[pair.Key] = pair.Value;
+                }
+
+                environmentName = values.GetValueOrDefault("TEST_ENV")?.Trim().ToLowerInvariant();
+            }
+        }
+
+        environmentName = TestEnvironment.GetEnvironmentName(environmentName, policy);
         var environmentFile = projectDirectory is null
             ? null
             : Path.Combine(projectDirectory, $".env.{environmentName}");
@@ -52,7 +73,7 @@ public static class TestConfig
         var environment = TestEnvironment.Create(
             environmentName,
             values.GetValueOrDefault("BASE_URL"),
-            string.Equals(Environment.GetEnvironmentVariable("ALLOW_PRODUCTION_TESTS"),
+            string.Equals(values.GetValueOrDefault("ALLOW_PRODUCTION_TESTS"),
                 "true", StringComparison.OrdinalIgnoreCase),
             policy);
 

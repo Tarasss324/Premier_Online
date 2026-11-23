@@ -1,7 +1,7 @@
 {
   "AllowedHosts": {
     "local": ["localhost", "127.0.0.1", "::1"],
-    "stage": [],
+    "stage": ["www.premieronline.com", "premieronline.com"],
     "prod": ["www.premieronline.com", "premieronline.com"]
   },
   "ProductionHosts": ["www.premieronline.com", "premieronline.com"]
